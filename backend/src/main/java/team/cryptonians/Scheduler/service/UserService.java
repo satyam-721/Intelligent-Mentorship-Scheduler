@@ -3,7 +3,7 @@ package team.cryptonians.Scheduler.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import team.cryptonians.Scheduler.UserRepo;
+import team.cryptonians.Scheduler.repo.UserRepo;
 import team.cryptonians.Scheduler.model.User;
 
 @Service

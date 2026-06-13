@@ -17,7 +17,7 @@ import java.util.function.Function;
 public class JwtService {
 
     //TODO: key should not be here
-    private static final String SECRETE_KEY = "satyamsagarprasadsatyamsagarprasad";
+    private static final String SECRETE_KEY = "2c83bc1230fb159239ba7f1d431cde72bf23e59002bb6c2df31c713280aa3b02";
 
     public String generateToken(String username) {
 

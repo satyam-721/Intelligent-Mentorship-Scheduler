@@ -36,7 +36,7 @@ public class SpringConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login","/register").permitAll()
-                        .requestMatchers("/mentor/**").hasRole("MENTOR")
+                        .requestMatchers("/api/mentor/**").hasAuthority("MENTOR")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

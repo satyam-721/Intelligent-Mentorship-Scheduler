@@ -6,6 +6,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
+import team.cryptonians.Scheduler.dto.UserDto;
 import team.cryptonians.Scheduler.model.User;
 import team.cryptonians.Scheduler.service.JwtService;
 import team.cryptonians.Scheduler.service.UserService;
@@ -23,14 +24,13 @@ public class UserController {
     UserService service;
 
     @PostMapping("/login")
-    public String login(@RequestBody User user){
-        user.setRole("_");
+    public String login(@RequestBody UserDto userdto){
         Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword())
+                new UsernamePasswordAuthenticationToken(userdto.getUsername(),userdto.getPassword())
         );
 
         if(auth.isAuthenticated()){
-            return jwtService.generateToken(user.getUsername());
+            return jwtService.generateToken(userdto.getUsername());
         }
 
         return "Failed";

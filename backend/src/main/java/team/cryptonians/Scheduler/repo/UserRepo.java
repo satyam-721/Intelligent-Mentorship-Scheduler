@@ -1,4 +1,4 @@
-package team.cryptonians.Scheduler;
+package team.cryptonians.Scheduler.repo;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
