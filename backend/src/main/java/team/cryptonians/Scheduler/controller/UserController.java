@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 import team.cryptonians.Scheduler.model.User;
 import team.cryptonians.Scheduler.service.JwtService;
+import team.cryptonians.Scheduler.service.UserService;
 
 @RestController
 public class UserController {
@@ -17,6 +18,9 @@ public class UserController {
 
     @Autowired
     JwtService jwtService;
+
+    @Autowired
+    UserService service;
 
     @PostMapping("/login")
     public String login(@RequestBody User user){
@@ -32,5 +36,9 @@ public class UserController {
         return "Failed";
     }
 
+    @PostMapping("/register")
+    public User register(@RequestBody User user){
+        return service.saveUser(user);
+    }
 
 }
