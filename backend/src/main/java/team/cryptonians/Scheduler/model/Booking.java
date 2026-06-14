@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -14,9 +15,21 @@ import java.time.Instant;
 @Table(name="bookings")
 public class Booking {
 
+    public Booking(User mentor, User student, AvailabilitySlot slot, LocalDateTime startUtc, LocalDateTime endUtc, Integer durationMinutes, BookingStatus status, String sessionAgenda, Instant createdAt) {
+        this.mentor = mentor;
+        this.student = student;
+        this.slot = slot;
+        this.startUtc = startUtc;
+        this.endUtc = endUtc;
+        this.durationMinutes = durationMinutes;
+        this.status = status;
+        this.sessionAgenda = sessionAgenda;
+        this.createdAt = createdAt;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "mentor_id", nullable = false)
@@ -34,10 +47,10 @@ public class Booking {
     //SESSION time window (not nullable)
 
     @Column(name = "start_utc", nullable = false)
-    private Instant startUtc;
+    private LocalDateTime startUtc;
 
     @Column(name = "end_utc", nullable = false)
-    private Instant endUtc;
+    private LocalDateTime endUtc;
 
     @Column(name = "duration_minutes", nullable = false)
     private Integer durationMinutes;
@@ -46,8 +59,10 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
 
+
+
     public enum BookingStatus{
-        PENDING,
+        BOOKED,
         CONFIRMED,
         COMPLETED,
         CANCELLED,         //may implement later
@@ -88,8 +103,10 @@ public class Booking {
 
 
 
+
+
     public boolean isPending() {
-        return BookingStatus.PENDING.equals(this.status);
+        return BookingStatus.BOOKED.equals(this.status);
     }
 
     public boolean isConfirmed() {
@@ -104,10 +121,10 @@ public class Booking {
         return BookingStatus.COMPLETED.equals(this.status);
     }
 
-    /** True if the session is in the future and not cancelled/rejected. */
-    public boolean isUpcoming() {
-        return (isPending() || isConfirmed()) && startUtc.isAfter(Instant.now());
-    }
+//    /** True if the session is in the future and not cancelled/rejected. */
+//    public boolean isUpcoming() {
+//        return (isPending() || isConfirmed()) && startUtc.isAfter(Instant.now());
+//    }
 
     /** True if a student review can still be submitted. */
     public boolean isReviewable() {

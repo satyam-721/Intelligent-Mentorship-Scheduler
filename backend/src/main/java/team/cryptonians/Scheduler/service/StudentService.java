@@ -1,13 +1,17 @@
 package team.cryptonians.Scheduler.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import team.cryptonians.Scheduler.dto.AvailabilitySlotResponse;
+import team.cryptonians.Scheduler.dto.BookingRequest;
 import team.cryptonians.Scheduler.dto.MentorSummaryResponse;
 import team.cryptonians.Scheduler.model.AvailabilitySlot;
+import team.cryptonians.Scheduler.model.Booking;
 import team.cryptonians.Scheduler.model.User;
+import team.cryptonians.Scheduler.repo.BookingRepo;
 import team.cryptonians.Scheduler.repo.SlotRepo;
 import team.cryptonians.Scheduler.repo.UserRepo;
 
@@ -23,6 +27,9 @@ public class StudentService {
 
     @Autowired
     UserRepo userRepo;
+
+    @Autowired
+    BookingRepo bookingRepo;
 
     public List<AvailabilitySlotResponse> getAllSlots() {
 
@@ -76,5 +83,59 @@ public class StudentService {
             );
         }
         return responseSlotList;
+    }
+
+    public Booking bookSlot(BookingRequest request) {
+
+        Authentication auth = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+        String studentname = auth.getName();
+
+        AvailabilitySlot slot = slotRepo.findById(request.getSlotId())
+                .orElseThrow(()->new RuntimeException("Slot not found"));
+
+        User mentor = userRepo.findByUsername(request.getMentorUsername());
+        User student = userRepo.findByUsername(studentname);
+        String sessionAgenda = request.getSessionAgenda();
+
+        //converting student local time to UTC
+        ZoneId studentZone = ZoneId.of(student.getTimezone());
+
+        LocalDateTime startUtc =
+                LocalDateTime.ofInstant(
+                        request.getStartTime()
+                                .atZone(studentZone)
+                                .toInstant(),
+                        ZoneOffset.UTC
+                );
+        LocalDateTime endUtc =
+                LocalDateTime.ofInstant(
+                        request.getEndTime()
+                                .atZone(studentZone)
+                                .toInstant(),
+                        ZoneOffset.UTC
+                );
+        Integer durationMinutes =
+                Math.toIntExact(Duration.between(startUtc, endUtc).toMinutes());
+
+
+
+        Booking booking = new Booking(
+                mentor,
+                student,
+                slot,
+                startUtc,
+                endUtc,
+                durationMinutes,
+                Booking.BookingStatus.BOOKED,
+                sessionAgenda,
+                Instant.now()
+
+
+        );
+        return bookingRepo.save(booking);
+
+
     }
 }
