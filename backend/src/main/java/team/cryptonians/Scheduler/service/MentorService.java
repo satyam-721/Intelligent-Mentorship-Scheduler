@@ -1,6 +1,8 @@
 package team.cryptonians.Scheduler.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import team.cryptonians.Scheduler.dto.SlotRequest;
 import team.cryptonians.Scheduler.model.AvailabilitySlot;
@@ -8,10 +10,7 @@ import team.cryptonians.Scheduler.model.User;
 import team.cryptonians.Scheduler.repo.SlotRepo;
 import team.cryptonians.Scheduler.repo.UserRepo;
 
-import java.time.Instant;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 
 @Service
 public class MentorService {
@@ -23,19 +22,23 @@ public class MentorService {
     UserRepo userRepo;
 
     public AvailabilitySlot save(SlotRequest request) {
-        //TODO: Mentor id should fetch from jwt
+        Authentication auth = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
 
-        User mentor = userRepo.findById(request.mentorId())
-                .orElseThrow(() ->
-                        new RuntimeException("Mentor not found"));
+        String mentorName = auth.getName();
+
+
+
+        User mentor = userRepo.findByUsername(mentorName);
 
         ZoneId zoneId = ZoneId.of(mentor.getTimezone());
 
         ZoneOffset offset =
                 zoneId.getRules().getOffset(Instant.now());
 
-        LocalTime startTimeUtc = request.startTime().minusSeconds(offset.getTotalSeconds());
-        LocalTime endTimeUtc = request.endTime().minusSeconds(offset.getTotalSeconds());
+        LocalDateTime startTimeUtc = request.startTime().minusSeconds(offset.getTotalSeconds());
+        LocalDateTime endTimeUtc = request.endTime().minusSeconds(offset.getTotalSeconds());
 
 
         AvailabilitySlot slot = AvailabilitySlot.builder()
@@ -48,6 +51,8 @@ public class MentorService {
                 .sessionDurationMinutes(request.sessionDurationMinutes())
                 .bufferMinutes(request.bufferMinutes())
                 .notes(request.notes())
+                .is_active(true)
+                .createdAt(Instant.now())
                 .build();
 
         return slotRepo.save(slot);

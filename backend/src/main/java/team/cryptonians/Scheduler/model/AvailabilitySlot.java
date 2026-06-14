@@ -30,6 +30,7 @@ public class AvailabilitySlot {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Enumerated(EnumType.STRING)
     private SlotType slotType;    //RECURRING,ONE_TIME
 
     public enum SlotType{
@@ -45,10 +46,10 @@ public class AvailabilitySlot {
 
     //Time Window (Stored in UTC) [for onetime or weekly(Recurring)]
     @Column(name = "start_time_utc", nullable = false)
-    private LocalTime startTimeUtc;
+    private LocalDateTime startTimeUtc;
 
     @Column(name = "end_time_utc", nullable = false)
-    private LocalTime endTimeUtc;
+    private LocalDateTime endTimeUtc;
 
     //Recurring Fields (null for slotType=ONE_TYPE)
     @Column(name = "day_of_week")

@@ -2,17 +2,13 @@ package team.cryptonians.Scheduler.dto;
 
 import team.cryptonians.Scheduler.model.AvailabilitySlot;
 
-import java.time.DayOfWeek;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
 
 public record SlotRequest(
     AvailabilitySlot.SlotType slotType,
-    Integer mentorId,
 
-    LocalTime startTime,
-    LocalTime endTime,
+    LocalDateTime startTime,
+    LocalDateTime endTime,
 
     DayOfWeek dayOfWeek,
     LocalDate slotDate,
