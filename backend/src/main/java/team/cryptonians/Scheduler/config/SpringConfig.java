@@ -35,7 +35,7 @@ public class SpringConfig {
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login","/register").permitAll()
+                        .requestMatchers("/login","/register","/api/google/callback").permitAll()
                         .requestMatchers("/api/mentor/**").hasAuthority("MENTOR")
                         .anyRequest().authenticated()
                 )
