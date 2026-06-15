@@ -11,6 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/mentor")
+@CrossOrigin("*")
 public class MentorController {
 
     @Autowired

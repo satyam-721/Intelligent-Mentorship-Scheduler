@@ -48,7 +48,15 @@ public class StudentService {
         List<AvailabilitySlotResponse> responseSlotList = new ArrayList<>();
 
         for(AvailabilitySlot slot: slotList){
-            if(slot.getIs_active() == false) continue;
+            if(slot.getIs_active() == false){
+                Booking booking = bookingRepo.findBySlotId(slot.getId());
+                if(booking == null) continue;
+
+                if (! booking.getStudent().getUsername().equals(studentname)) continue;
+
+            }
+
+
 
             ZoneId studentZone = ZoneId.of(student.getTimezone());
             LocalDateTime starttime =
@@ -80,7 +88,8 @@ public class StudentService {
                             slot.getSessionDurationMinutes(),
                             slot.getBufferMinutes(),
                             slot.getNotes(),
-                            slot.getMaxBookableSlots()
+                            slot.getMaxBookableSlots(),
+                            slot.getIs_active()
 
                     )
             );
@@ -136,6 +145,9 @@ public class StudentService {
                 sessionAgenda,
                 Instant.now()
         );
+
+        slot.setIs_active(false);
+        slotRepo.save(slot);
         booking = bookingRepo.save(booking);
         String meetingLink = new MeetLinkGenerationService().generateFor(booking);
         booking.setMeetLink(meetingLink);

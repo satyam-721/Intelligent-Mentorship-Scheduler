@@ -12,6 +12,7 @@ import team.cryptonians.Scheduler.service.JwtService;
 import team.cryptonians.Scheduler.service.UserService;
 
 @RestController
+@CrossOrigin("*")
 public class UserController {
 
     @Autowired

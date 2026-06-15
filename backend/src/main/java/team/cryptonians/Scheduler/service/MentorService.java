@@ -112,7 +112,8 @@ public class MentorService {
                             slot.getSessionDurationMinutes(),
                             slot.getBufferMinutes(),
                             slot.getNotes(),
-                            slot.getMaxBookableSlots()
+                            slot.getMaxBookableSlots(),
+                            slot.getIs_active()
 
                     )
             );

@@ -16,7 +16,8 @@ public record AvailabilitySlotResponse(
         Integer sessionDurationMinutes,
         Integer bufferMinutes,
         String notes,
-        Integer maxBookableSlots
+        Integer maxBookableSlots,
+        Boolean is_active
 ) {
 
 }
