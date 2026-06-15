@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './Button';
 import { studentService } from '../services/api';
@@ -8,8 +8,60 @@ export const BookingModal = ({ isOpen, onClose, slot }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [selectedStartTime, setSelectedStartTime] = useState('');
 
-  if (!isOpen || !slot) return null;
+  const safeSlot = slot || {
+    id: null,
+    mentor: { username: '' },
+    startTime: new Date().toISOString(),
+    endTime: new Date().toISOString(),
+    slotDate: '',
+    dayOfWeek: null,
+    sessionDurationMinutes: 60,
+    notes: ''
+  };
+
+  const durationMinutes = useMemo(() => {
+    const fromServer = Number(safeSlot.sessionDurationMinutes);
+    if (Number.isFinite(fromServer) && fromServer > 0) return fromServer;
+
+    const totalMinutes = Math.max(1, Math.round((new Date(safeSlot.endTime) - new Date(safeSlot.startTime)) / 60000));
+    return totalMinutes;
+  }, [safeSlot]);
+
+  const sessionOptions = useMemo(() => {
+    const start = new Date(safeSlot.startTime);
+    const end = new Date(safeSlot.endTime);
+    const stepMs = durationMinutes * 60 * 1000;
+    const options = [];
+
+    let current = new Date(start);
+    while (current.getTime() + stepMs <= end.getTime()) {
+      const optionEnd = new Date(current.getTime() + stepMs);
+      options.push({
+        startTime: current.toISOString(),
+        endTime: optionEnd.toISOString(),
+        label: `${current.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${optionEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      });
+      current = new Date(current.getTime() + stepMs);
+    }
+
+    if (options.length === 0) {
+      options.push({
+        startTime: safeSlot.startTime,
+        endTime: safeSlot.endTime,
+        label: `${new Date(safeSlot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(safeSlot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      });
+    }
+
+    return options;
+  }, [safeSlot, durationMinutes]);
+
+  useEffect(() => {
+    if (sessionOptions.length > 0 && !sessionOptions.some((option) => option.startTime === selectedStartTime)) {
+      setSelectedStartTime(sessionOptions[0].startTime);
+    }
+  }, [sessionOptions, selectedStartTime]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,11 +69,12 @@ export const BookingModal = ({ isOpen, onClose, slot }) => {
     setError('');
     setSuccess('');
     try {
+      const selectedSlot = sessionOptions.find((option) => option.startTime === selectedStartTime) || sessionOptions[0];
       const payload = {
-        slotId: slot.id,
-        mentorUsername: slot.mentor.username,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
+        slotId: safeSlot.id,
+        mentorUsername: safeSlot.mentor.username,
+        startTime: selectedSlot.startTime,
+        endTime: selectedSlot.endTime,
         sessionAgenda: sessionAgenda
       };
       await studentService.bookSlot(payload);
@@ -37,9 +90,12 @@ export const BookingModal = ({ isOpen, onClose, slot }) => {
     }
   };
 
-  const formattedDate = slot.slotDate ? new Date(slot.slotDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : (slot.dayOfWeek || 'Unknown Date');
-  const formattedStartTime = new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const formattedEndTime = new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const formattedDate = safeSlot.slotDate ? new Date(safeSlot.slotDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : (safeSlot.dayOfWeek || 'Unknown Date');
+  const selectedOption = sessionOptions.find((option) => option.startTime === selectedStartTime) || sessionOptions[0];
+  const formattedStartTime = new Date(selectedOption.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const formattedEndTime = new Date(selectedOption.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  if (!isOpen || !slot) return null;
 
   return (
     <AnimatePresence>
@@ -55,15 +111,33 @@ export const BookingModal = ({ isOpen, onClose, slot }) => {
             <span className="material-symbols-outlined">close</span>
           </button>
           
-          <h2 className="font-display text-2xl font-bold mb-sm">Book Session with {slot.mentor.username}</h2>
-          <p className="text-on-surface-variant text-label-sm mb-lg">
+          <h2 className="font-display text-2xl font-bold mb-sm">Book Session with {safeSlot.mentor.username}</h2>
+          <p className="text-on-surface-variant text-label-sm mb-sm">
             {formattedDate} | {formattedStartTime} - {formattedEndTime}
+          </p>
+          <p className="text-on-surface-variant text-label-sm mb-lg">
+            Session duration: {durationMinutes} minutes. Select which part of the slot you want to book.
           </p>
           
           {error && <div className="bg-error/20 text-error p-sm rounded-md mb-md text-label-sm">{error}</div>}
           {success && <div className="bg-primary/20 text-primary p-sm rounded-md mb-md text-label-sm">{success}</div>}
 
           <form onSubmit={handleSubmit} className="space-y-md">
+            <div className="flex flex-col gap-xs">
+              <label className="text-label-sm font-bold text-on-surface-variant">Choose session time</label>
+              <select
+                value={selectedStartTime}
+                onChange={(e) => setSelectedStartTime(e.target.value)}
+                className="w-full bg-surface-container border border-outline-variant/50 rounded-xl px-lg py-3 focus:border-primary focus:outline-none"
+              >
+                {sessionOptions.map((option) => (
+                  <option key={option.startTime} value={option.startTime}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex flex-col gap-xs">
               <label className="text-label-sm font-bold text-on-surface-variant">Session Agenda / Topic</label>
               <textarea 

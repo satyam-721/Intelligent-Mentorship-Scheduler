@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import BrowseMentors from './pages/BrowseMentors';
 import StudentDashboard from './pages/StudentDashboard';
 import MentorDashboard from './pages/MentorDashboard';
+import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Features from './pages/Features';
@@ -24,9 +25,9 @@ function App() {
           <Route path="/features" element={<Features />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/about" element={<About />} />
-          <Route path="/student/dashboard" element={
-            <ProtectedRoute allowedRoles={['STUDENT']}>
-              <StudentDashboard />
+          <Route path="/dashboard" element={
+            <ProtectedRoute allowedRoles={['STUDENT', 'MENTOR']}>
+              <Dashboard />
             </ProtectedRoute>
           } />
           <Route path="/mentor/dashboard" element={

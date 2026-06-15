@@ -11,7 +11,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect to their respective dashboard if they try to access the wrong role's dashboard
-    return <Navigate to={user.role === 'MENTOR' ? '/mentor/dashboard' : '/student/dashboard'} replace />;
+    return <Navigate to={user.role === 'MENTOR' ? '/dashboard' : '/dashboard'} replace />;
   }
 
   return children;

@@ -211,37 +211,75 @@ const Register = () => {
                       <option value="Asia/Tokyo">Tokyo (JST)</option>
                     </select>
                   </div>
-                  
-                  {formData.role === 'MENTOR' && (
-                    <>
-                      <div className="grid grid-cols-2 gap-md">
-                        <div className="flex flex-col gap-xs group">
-                          <label className="text-label-sm font-bold text-on-surface-variant group-focus-within:text-primary transition-colors tracking-wider">JOB TITLE</label>
-                          <input 
-                            type="text" value={formData.jobTitle} onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
-                            className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-lg py-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all shadow-inner"
-                            placeholder="Senior Engineer" required
-                          />
-                        </div>
-                        <div className="flex flex-col gap-xs group">
-                          <label className="text-label-sm font-bold text-on-surface-variant group-focus-within:text-primary transition-colors tracking-wider">COMPANY</label>
-                          <input 
-                            type="text" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                            className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-lg py-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all shadow-inner"
-                            placeholder="Stripe" required
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-xs group">
-                        <label className="text-label-sm font-bold text-on-surface-variant group-focus-within:text-primary transition-colors tracking-wider">SHORT BIO</label>
-                        <textarea 
-                          value={formData.bio} onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                          className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-lg py-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all shadow-inner min-h-[100px]"
-                          placeholder="Tell students about your expertise..." required
-                        />
-                      </div>
-                    </>
-                  )}
+
+                  <div className="flex flex-col gap-xs group">
+                    <label className="text-label-sm font-bold text-on-surface-variant group-focus-within:text-primary transition-colors tracking-wider">BIO</label>
+                    <textarea
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-lg py-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all shadow-inner min-h-[100px]"
+                      placeholder="Tell us a bit about yourself or your goals."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                    <div className="flex flex-col gap-xs group">
+                      <label className="text-label-sm font-bold text-on-surface-variant group-focus-within:text-primary transition-colors tracking-wider">LINKEDIN URL</label>
+                      <input
+                        type="url"
+                        value={formData.linkedinUrl}
+                        onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
+                        className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-lg py-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all shadow-inner"
+                        placeholder="https://linkedin.com/in/your-profile"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-xs group">
+                      <label className="text-label-sm font-bold text-on-surface-variant group-focus-within:text-primary transition-colors tracking-wider">GITHUB USERNAME</label>
+                      <input
+                        type="text"
+                        value={formData.githubUsername}
+                        onChange={(e) => setFormData({ ...formData, githubUsername: e.target.value })}
+                        className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-lg py-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all shadow-inner"
+                        placeholder="your-github-handle"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                    <div className="flex flex-col gap-xs group">
+                      <label className="text-label-sm font-bold text-on-surface-variant group-focus-within:text-primary transition-colors tracking-wider">YEARS OF EXPERIENCE</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.yearsOfExperience}
+                        onChange={(e) => setFormData({ ...formData, yearsOfExperience: Number(e.target.value) || 0 })}
+                        className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-lg py-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all shadow-inner"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-xs group">
+                      <label className="text-label-sm font-bold text-on-surface-variant group-focus-within:text-primary transition-colors tracking-wider">JOB TITLE</label>
+                      <input
+                        type="text"
+                        value={formData.jobTitle}
+                        onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+                        className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-lg py-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all shadow-inner"
+                        placeholder="Software Engineer"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-xs group">
+                    <label className="text-label-sm font-bold text-on-surface-variant group-focus-within:text-primary transition-colors tracking-wider">COMPANY</label>
+                    <input
+                      type="text"
+                      value={formData.company}
+                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                      className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl px-lg py-3 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all shadow-inner"
+                      placeholder="Your company or organization"
+                    />
+                  </div>
+
                 </motion.div>
               )}
             </AnimatePresence>

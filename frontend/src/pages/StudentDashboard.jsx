@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { studentService } from '../services/api';
-import { PillNav } from '../components/PillNav';
 import { motion } from 'framer-motion';
 import { MagicBento } from '../components/MagicBento';
 import { Button } from '../components/Button';
 import { Skeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
+import { SlotCreationModal } from '../components/SlotCreationModal';
 import { useNavigate } from 'react-router-dom';
 
 const staggerContainer = {
@@ -24,6 +24,7 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSlotModalOpen, setIsSlotModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -47,8 +48,7 @@ const StudentDashboard = () => {
 
   return (
     <div className="bg-background min-h-screen text-on-background selection:bg-primary/30">
-      <PillNav />
-      
+      <SlotCreationModal isOpen={isSlotModalOpen} onClose={() => setIsSlotModalOpen(false)} />
       <main className="max-w-7xl mx-auto px-margin-desktop pt-32 pb-24 space-y-2xl">
         
         {/* Welcome Section */}
@@ -60,9 +60,12 @@ const StudentDashboard = () => {
             <h1 className="font-display text-5xl mb-xs">Welcome back, <span className="text-primary">{user?.username}</span></h1>
             <p className="text-on-surface-variant text-body-lg">Ready to level up your career today?</p>
           </div>
-          <Button onClick={() => navigate('/browse-mentors')} iconRight="search" className="py-3 px-6 shadow-[0_0_15px_rgba(46,107,79,0.3)]">
-            Find a New Mentor
-          </Button>
+          <div className="flex flex-wrap gap-md">
+            <Button onClick={() => navigate('/browse-mentors')} iconRight="search" className="py-3 px-6 shadow-[0_0_15px_rgba(46,107,79,0.3)]">
+              Browse Mentors
+            </Button>
+            <Button iconRight="edit_calendar" onClick={() => setIsSlotModalOpen(true)}>Create Slot</Button>
+          </div>
         </motion.div>
 
         {/* Stats Grid */}
@@ -90,7 +93,7 @@ const StudentDashboard = () => {
         <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 lg:grid-cols-3 gap-2xl">
           
           {/* Main Content: Upcoming Sessions */}
-          <div className="lg:col-span-2 space-y-lg">
+          <div className="w-full space-y-lg">
             <div className="flex justify-between items-center">
               <h2 className="font-headline-md font-bold">Upcoming Sessions</h2>
               <Button variant="ghost" className="text-primary" iconRight="open_in_new">View Calendar</Button>
@@ -148,41 +151,6 @@ const StudentDashboard = () => {
                 </MagicBento>
               </motion.div>
             )}
-          </div>
-
-          {/* Sidebar: Recommended Mentors or Activity */}
-          <div className="space-y-lg">
-            <h2 className="font-headline-md font-bold">Recommended Mentors</h2>
-            <motion.div variants={fadeUp}>
-              <MagicBento className="p-lg flex flex-col gap-md" tilt={false}>
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex gap-md items-center group cursor-pointer p-sm rounded-xl hover:bg-surface-variant/50 transition-colors">
-                    <img src={`https://i.pravatar.cc/100?img=${i+20}`} alt="Mentor" className="w-12 h-12 rounded-full border border-outline-variant group-hover:border-primary transition-colors" />
-                    <div className="flex-1">
-                      <p className="font-bold text-label-md group-hover:text-primary transition-colors">Sarah Chen</p>
-                      <p className="text-label-sm text-outline">Staff Engineer @ Stripe</p>
-                    </div>
-                    <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors">arrow_forward_ios</span>
-                  </div>
-                ))}
-                <div className="border-t border-outline-variant/30 mt-sm pt-md">
-                  <Button variant="ghost" className="w-full text-label-sm uppercase tracking-wider" onClick={() => navigate('/browse-mentors')}>View All</Button>
-                </div>
-              </MagicBento>
-            </motion.div>
-
-            <motion.div variants={fadeUp} className="pt-md">
-              <MagicBento className="p-xl bg-gradient-to-br from-surface-container-high to-primary/5 border-primary/20" tilt={false}>
-                <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center mb-md">
-                  <span className="material-symbols-outlined">auto_awesome</span>
-                </div>
-                <h3 className="font-bold text-label-md mb-xs">Pro Tip</h3>
-                <p className="text-label-sm text-on-surface-variant">
-                  Sync your Google Calendar so Mentors know exactly when you are free without sending messages back and forth.
-                </p>
-                <Button variant="outline" className="w-full mt-md py-2 border-primary/30 hover:border-primary/50 text-label-sm">Connect Calendar</Button>
-              </MagicBento>
-            </motion.div>
           </div>
 
         </motion.div>

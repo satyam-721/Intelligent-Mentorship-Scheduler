@@ -42,11 +42,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(mockedUser));
         setUser(mockedUser);
         
-        if (mockedUser.role === 'MENTOR') {
-          navigate('/mentor/dashboard');
-        } else {
-          navigate('/student/dashboard');
-        }
+        navigate('/dashboard');
         return true;
       }
       return false;

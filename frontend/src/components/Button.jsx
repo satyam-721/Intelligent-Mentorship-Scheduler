@@ -4,6 +4,7 @@ import { cn } from '../utils/cn';
 
 export const Button = ({ children, className, variant = 'primary', icon, iconRight, isLoading, ...props }) => {
   const baseStyles = "relative inline-flex items-center justify-center gap-2 rounded-xl font-bold transition-colors overflow-hidden";
+  const buttonType = props.type || 'button';
   
   const variants = {
     primary: "bg-primary text-on-primary hover:bg-primary-fixed active:bg-primary-fixed-dim",
@@ -18,6 +19,7 @@ export const Button = ({ children, className, variant = 'primary', icon, iconRig
       whileTap={{ scale: 0.98 }}
       className={cn(baseStyles, variants[variant], "px-lg py-md text-body-md", className)}
       disabled={isLoading}
+      type={buttonType}
       {...props}
     >
       {isLoading ? (

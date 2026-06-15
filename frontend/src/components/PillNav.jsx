@@ -6,10 +6,7 @@ import { Button } from './Button';
 
 const navItems = [
   { name: 'Home', path: '/' },
-  { name: 'Browse Mentors', path: '/browse-mentors' },
-  { name: 'Features', path: '/features' },
-  { name: 'Pricing', path: '/pricing' },
-  { name: 'About', path: '/about' }
+  { name: 'Browse Mentors', path: '/browse-mentors' }
 ];
 
 export const PillNav = () => {
@@ -27,9 +24,7 @@ export const PillNav = () => {
 
   const currentItems = [...navItems];
   if (user) {
-    currentItems.push({ name: 'Dashboard', path: user.role === 'MENTOR' ? '/mentor/dashboard' : '/student/dashboard' });
-    currentItems.push({ name: 'Notifications', path: '/notifications' });
-    currentItems.push({ name: 'Profile', path: '/profile' });
+    currentItems.push({ name: 'Dashboard', path: user.role === 'MENTOR' ? '/mentor/dashboard' : '/dashboard' });
   }
 
   return (

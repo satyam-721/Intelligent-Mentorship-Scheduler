@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { mentorService } from '../services/api';
-import { PillNav } from '../components/PillNav';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MagicBento } from '../components/MagicBento';
 import { Button } from '../components/Button';
@@ -32,6 +32,7 @@ const fadeUp = {
 
 const MentorDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +64,6 @@ const MentorDashboard = () => {
 
   return (
     <div className="bg-background min-h-screen text-on-background selection:bg-primary/30">
-      <PillNav />
       <SlotCreationModal isOpen={isSlotModalOpen} onClose={() => setIsSlotModalOpen(false)} />
       
       <main className="max-w-7xl mx-auto px-margin-desktop pt-32 pb-24 space-y-2xl">
@@ -77,9 +77,10 @@ const MentorDashboard = () => {
             <h1 className="font-display text-5xl mb-xs">Mentor Dashboard</h1>
             <p className="text-on-surface-variant text-body-lg">Manage your schedule, requests, and analytics.</p>
           </div>
-          <div className="flex gap-md">
+          <div className="flex flex-wrap gap-md">
+            <Button variant="outline" iconRight="search" onClick={() => navigate('/browse-mentors')}>Browse Mentors</Button>
+            <Button iconRight="edit_calendar" onClick={() => setIsSlotModalOpen(true)}>Create Slot</Button>
             <Button variant="outline" iconRight="sync" className="bg-surface/50 backdrop-blur-md">Sync Calendar</Button>
-            <Button iconRight="edit_calendar" onClick={() => setIsSlotModalOpen(true)}>Manage Availability</Button>
           </div>
         </motion.div>
 
@@ -110,27 +111,22 @@ const MentorDashboard = () => {
           {/* Main Area: Analytics & Requests */}
           <div className="lg:col-span-2 space-y-2xl">
             
-            {/* Analytics Chart */}
             <motion.div variants={fadeUp} className="space-y-lg">
-              <h2 className="font-headline-md font-bold">Mentorship Analytics</h2>
-              <MagicBento className="h-96 w-full p-md pt-xl flex flex-col justify-end" tilt={false}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={analyticsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="rgba(46, 107, 79, 0.4)" stopOpacity={1}/>
-                        <stop offset="95%" stopColor="rgba(46, 107, 79, 0.0)" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#A0A0A0', fontSize: 12, fontFamily: 'Sora' }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#A0A0A0', fontSize: 12, fontFamily: 'Sora' }} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#161A1D', border: '1px solid #2B3137', borderRadius: '12px', fontFamily: 'Space Grotesk' }}
-                      itemStyle={{ color: '#2E6B4F', fontWeight: 'bold' }}
-                    />
-                    <Area type="monotone" dataKey="hours" stroke="#2E6B4F" strokeWidth={4} fillOpacity={1} fill="url(#colorHours)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <h2 className="font-headline-md font-bold">Overview</h2>
+              <MagicBento className="p-xl" tilt={false}>
+                <p className="text-on-surface-variant text-body-md mb-md">
+                  Keep your mentoring schedule in one place. Review urgent requests and confirm upcoming sessions from this simple view.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                  <div className="rounded-xl border border-outline-variant/30 bg-surface-container-low p-md">
+                    <p className="text-label-sm uppercase tracking-wider text-on-surface-variant">Pending requests</p>
+                    <p className="text-headline-md font-bold mt-xs">{pendingRequests.length}</p>
+                  </div>
+                  <div className="rounded-xl border border-outline-variant/30 bg-surface-container-low p-md">
+                    <p className="text-label-sm uppercase tracking-wider text-on-surface-variant">Upcoming sessions</p>
+                    <p className="text-headline-md font-bold mt-xs">{upcomingSessions.length}</p>
+                  </div>
+                </div>
               </MagicBento>
             </motion.div>
 
