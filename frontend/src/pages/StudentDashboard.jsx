@@ -39,6 +39,15 @@ const StudentDashboard = () => {
     if (user?.id) fetchDashboardData();
   }, [user]);
 
+  const handleCancel = async (bookingId) => {
+    try {
+      await studentService.cancelBooking(bookingId);
+      setUpcomingSessions(prev => prev.filter(s => s.id !== bookingId));
+    } catch (error) {
+      console.error('Failed to cancel booking:', error);
+    }
+  };
+
   const stats = [
     { label: "Completed Sessions", value: "12", icon: "task_alt", trend: "+2 this month" },
     { label: "Mentors Connected", value: "4", icon: "groups", trend: "Top 10% active" },
@@ -111,7 +120,7 @@ const StudentDashboard = () => {
             ) : upcomingSessions.length > 0 ? (
               <div className="space-y-md">
                 {upcomingSessions.map((session, i) => (
-                  <motion.div key={session.id} variants={fadeUp}>
+                  <motion.div key={session.id || i} variants={fadeUp}>
                     <MagicBento className="p-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-lg hover:border-primary/50 transition-colors">
                       <div className="flex gap-md items-center">
                         <div className="w-16 h-16 rounded-xl bg-primary/10 text-primary flex flex-col items-center justify-center border border-primary/20">
@@ -119,8 +128,8 @@ const StudentDashboard = () => {
                           <span className="font-display text-2xl leading-none font-bold">{new Date(session.startTime).getDate()}</span>
                         </div>
                         <div>
-                          <h3 className="font-bold text-headline-md leading-tight">Mock Interview Session</h3>
-                          <p className="text-on-surface-variant text-label-sm mt-1">with <span className="font-bold text-on-surface">{session.mentorName || 'Mentor'}</span></p>
+                          <h3 className="font-bold text-headline-md leading-tight">Mentorship Session</h3>
+                          <p className="text-on-surface-variant text-label-sm mt-1">with <span className="font-bold text-on-surface">{session.mentor?.username || 'Mentor'}</span></p>
                           <div className="flex items-center gap-xs mt-sm text-label-sm text-outline font-bold">
                             <span className="material-symbols-outlined text-[14px]">schedule</span>
                             {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(session.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -128,7 +137,7 @@ const StudentDashboard = () => {
                         </div>
                       </div>
                       <div className="flex gap-sm w-full md:w-auto">
-                        <Button variant="outline" iconRight="edit_calendar" className="flex-1 md:flex-none py-3">Reschedule</Button>
+                        <Button variant="outline" onClick={() => handleCancel(session.id)} className="flex-1 md:flex-none py-3 text-error hover:bg-error/10 hover:border-error/50">Cancel</Button>
                         <Button iconRight="videocam" className="flex-1 md:flex-none py-3">Join Meet</Button>
                       </div>
                     </MagicBento>

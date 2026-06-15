@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/Button';
 import { MagicBento } from '../components/MagicBento';
-import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const steps = [
   { id: 'role', title: 'Choose Role' },
@@ -13,13 +13,15 @@ const steps = [
 
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     role: 'STUDENT',
-    timezone: 'UTC',
+    timezone: 'Asia/Kolkata', // default timezone
     bio: '',
+    linkedinUrl: '',
     githubUsername: '',
     yearsOfExperience: 0,
     jobTitle: '',
@@ -39,8 +41,8 @@ const Register = () => {
     setError('');
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:8080/api/users/register', formData);
-      navigate('/login');
+      await register(formData);
+      // navigation is handled inside register
     } catch (err) {
       setError(err.response?.data || 'An error occurred during registration');
     } finally {

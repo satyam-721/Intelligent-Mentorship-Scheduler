@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { GlobalLoginModal } from '../components/GlobalLoginModal';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,17 +18,29 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
+
+    // Global listener for 401/403
+    const handleUnauthorized = () => {
+      setIsModalOpen(true);
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    };
   }, []);
 
   const login = async (credentials) => {
     try {
       const response = await authService.login(credentials);
-      // The backend returns the JWT token as a string right now
-      const token = response.data;
+      // The backend returns the JWT token as a string
+      const token = typeof response.data === 'string' ? response.data : response.data?.token;
+      
       if (token && token !== "Failed") {
         localStorage.setItem('token', token);
-        // We will mock the user role for now until backend profile API is done
-        const mockedUser = { username: credentials.username, role: credentials.username.includes('mentor') ? 'MENTOR' : 'STUDENT' };
+        // We will mock the user role based on credentials for now if backend doesn't send it in login
+        // Ideally we decode the JWT or have a /me endpoint. For now mock based on role input or username
+        const mockedUser = { username: credentials.username, role: credentials.role || (credentials.username.includes('mentor') ? 'MENTOR' : 'STUDENT') };
         localStorage.setItem('user', JSON.stringify(mockedUser));
         setUser(mockedUser);
         
@@ -47,8 +61,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       await authService.register(userData);
-      // Automatically login after successful registration
-      return await login({ username: userData.username, password: userData.password });
+      // Do not auto login.
+      navigate('/login');
+      return true;
     } catch (error) {
       console.error('Registration failed', error);
       throw error;
@@ -59,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    navigate('/');
+    navigate('/login');
   };
 
   if (loading) {
@@ -69,6 +84,15 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
+      <GlobalLoginModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onLoginSuccess={(user) => {
+          setUser(user);
+          setIsModalOpen(false);
+          // They can now resume whatever they were doing
+        }} 
+      />
     </AuthContext.Provider>
   );
 };

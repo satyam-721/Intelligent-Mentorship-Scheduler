@@ -26,11 +26,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized (e.g., clear token and redirect to login)
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Handle unauthorized/forbidden
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.dispatchEvent(new Event('auth:unauthorized'));
+      // We will rely on AuthContext or a global listener to handle redirect or modal
     }
     return Promise.reject(error);
   }
@@ -42,17 +43,17 @@ export const authService = {
 };
 
 export const mentorService = {
-  getSlots: () => api.get('/api/mentor/slot'),
   createSlot: (slotData) => api.post('/api/mentor/slot', slotData),
-  getBookings: (mentorId) => api.get(`/api/booking/mentor/${mentorId}`),
+  getUpcomingSessions: (mentorId) => api.get(`/api/booking/mentor/${mentorId}`),
+  getPendingRequests: (mentorId) => api.get(`/api/booking/mentor/${mentorId}/pending`),
   confirmBooking: (bookingId) => api.post(`/api/booking/${bookingId}/confirm`),
   rejectBooking: (bookingId) => api.post(`/api/booking/${bookingId}/reject`),
 };
 
 export const studentService = {
-  getMentors: () => api.get('/api/student/mentors'),
-  bookSession: (bookingData) => api.post('/api/booking/book', bookingData),
-  getBookings: (studentId) => api.get(`/api/booking/student/${studentId}`),
+  getMentorSlots: () => api.get('/api/student/mentorslots'),
+  bookSlot: (bookingData) => api.post('/api/student/bookslot', bookingData),
+  getUpcomingSessions: (studentId) => api.get(`/api/booking/student/${studentId}`),
   cancelBooking: (bookingId) => api.post(`/api/booking/${bookingId}/cancel`),
 };
 

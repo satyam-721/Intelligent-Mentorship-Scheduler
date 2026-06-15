@@ -8,6 +8,7 @@ import { Button } from '../components/Button';
 import { Skeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { SlotCreationModal } from '../components/SlotCreationModal';
 
 const analyticsData = [
   { name: 'Mon', hours: 2 },
@@ -19,11 +20,6 @@ const analyticsData = [
   { name: 'Sun', hours: 4 },
 ];
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
-
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
@@ -34,6 +30,7 @@ const MentorDashboard = () => {
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSlotModalOpen, setIsSlotModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -59,9 +56,31 @@ const MentorDashboard = () => {
     { label: "Average Rating", value: "5.0", icon: "star", trend: "Top Mentor" }
   ];
 
+  const handleConfirm = async (bookingId) => {
+    try {
+      await mentorService.confirmBooking(bookingId);
+      setPendingRequests(prev => prev.filter(r => r.id !== bookingId));
+      // Optionally fetch upcoming sessions again
+      const upcomingRes = await mentorService.getUpcomingSessions(user.id);
+      setUpcomingSessions(upcomingRes.data);
+    } catch (error) {
+      console.error('Failed to confirm booking:', error);
+    }
+  };
+
+  const handleReject = async (bookingId) => {
+    try {
+      await mentorService.rejectBooking(bookingId);
+      setPendingRequests(prev => prev.filter(r => r.id !== bookingId));
+    } catch (error) {
+      console.error('Failed to reject booking:', error);
+    }
+  };
+
   return (
     <div className="bg-background min-h-screen text-on-background selection:bg-primary/30">
       <PillNav />
+      <SlotCreationModal isOpen={isSlotModalOpen} onClose={() => setIsSlotModalOpen(false)} />
       
       <main className="max-w-7xl mx-auto px-margin-desktop pt-32 pb-24 space-y-2xl">
         
@@ -76,147 +95,157 @@ const MentorDashboard = () => {
           </div>
           <div className="flex gap-md">
             <Button variant="outline" iconRight="sync" className="bg-surface/50 backdrop-blur-md">Sync Calendar</Button>
-            <Button iconRight="edit_calendar">Manage Availability</Button>
+            <Button iconRight="edit_calendar" onClick={() => setIsSlotModalOpen(true)}>Manage Availability</Button>
           </div>
         </motion.div>
 
         {/* Stats Grid */}
-        <motion.div 
-          variants={staggerContainer} initial="hidden" animate="visible"
-          className="grid grid-cols-1 md:grid-cols-3 gap-lg"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
           {stats.map((stat, i) => (
-            <motion.div key={i} variants={fadeUp}>
-              <MagicBento className="p-xl" tilt={false}>
-                <div className="flex justify-between items-start mb-md">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-surface-variant text-on-surface">
-                    <span className="material-symbols-outlined">{stat.icon}</span>
-                  </div>
-                  <span className="text-label-sm font-bold px-2 py-1 rounded-md bg-primary/10 text-primary">{stat.trend}</span>
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+              <MagicBento className="p-xl relative overflow-hidden" tilt={false}>
+                <div className="absolute -right-6 -top-6 text-primary/10">
+                  <span className="material-symbols-outlined text-9xl">{stat.icon}</span>
                 </div>
-                <h3 className="text-display font-bold mb-xs text-4xl">{stat.value}</h3>
-                <p className="text-on-surface-variant text-label-sm uppercase tracking-wider">{stat.label}</p>
+                <div className="relative z-10">
+                  <p className="text-label-md font-bold text-on-surface-variant mb-md">{stat.label}</p>
+                  <p className="font-display text-5xl font-bold mb-xs">{stat.value}</p>
+                  <p className="text-label-sm text-primary font-bold tracking-wider uppercase">{stat.trend}</p>
+                </div>
               </MagicBento>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* Bento Layout Content */}
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 lg:grid-cols-3 gap-2xl">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2xl">
           
-          {/* Main Area: Analytics & Requests */}
+          {/* Main Content Area */}
           <div className="lg:col-span-2 space-y-2xl">
-            
-            {/* Analytics Chart */}
-            <motion.div variants={fadeUp} className="space-y-lg">
-              <h2 className="font-headline-md font-bold">Mentorship Analytics</h2>
-              <MagicBento className="h-96 w-full p-md pt-xl flex flex-col justify-end" tilt={false}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={analyticsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="rgba(46, 107, 79, 0.4)" stopOpacity={1}/>
-                        <stop offset="95%" stopColor="rgba(46, 107, 79, 0.0)" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#A0A0A0', fontSize: 12, fontFamily: 'Sora' }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#A0A0A0', fontSize: 12, fontFamily: 'Sora' }} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#161A1D', border: '1px solid #2B3137', borderRadius: '12px', fontFamily: 'Space Grotesk' }}
-                      itemStyle={{ color: '#2E6B4F', fontWeight: 'bold' }}
-                    />
-                    <Area type="monotone" dataKey="hours" stroke="#2E6B4F" strokeWidth={4} fillOpacity={1} fill="url(#colorHours)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </MagicBento>
-            </motion.div>
-
-            {/* Pending Requests */}
-            <motion.div variants={fadeUp} className="space-y-lg">
-              <div className="flex justify-between items-center">
-                <h2 className="font-headline-md font-bold">Pending Requests</h2>
-                <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-label-sm font-bold">{pendingRequests.length}</span>
+            {/* Upcoming Sessions */}
+            <section>
+              <div className="flex justify-between items-center mb-lg">
+                <h2 className="font-headline-lg text-headline-lg font-bold">Upcoming Sessions</h2>
+                <Button variant="ghost" iconRight="arrow_forward">View All</Button>
               </div>
               
               {loading ? (
-                <MagicBento className="h-32 w-full flex items-center justify-center p-md">
-                  <div className="w-full flex items-center gap-md">
-                    <Skeleton className="w-12 h-12 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-1/3" />
-                      <Skeleton className="h-3 w-1/4" />
-                    </div>
-                  </div>
-                </MagicBento>
-              ) : pendingRequests.length > 0 ? (
                 <div className="space-y-md">
-                  {pendingRequests.map((req, i) => (
-                    <MagicBento key={req.id} className="p-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-md" tilt={false}>
-                      <div className="flex gap-md items-center">
-                        <img src={`https://i.pravatar.cc/100?u=${req.studentName || 'student'}`} alt="Student" className="w-12 h-12 rounded-full border border-outline-variant" />
+                  {[1, 2].map(i => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
+                </div>
+              ) : upcomingSessions.length > 0 ? (
+                <div className="space-y-md">
+                  {upcomingSessions.map((session, i) => (
+                    <MagicBento key={session.id || i} className="p-lg flex flex-col md:flex-row gap-lg items-start md:items-center justify-between" tilt={false} magnetism={false}>
+                      <div className="flex items-center gap-md">
+                        <img 
+                          src={`https://i.pravatar.cc/150?u=${session.student?.username || 'unknown'}`} 
+                          alt="Student" 
+                          className="w-14 h-14 rounded-full object-cover border border-outline-variant/50"
+                        />
                         <div>
-                          <h3 className="font-bold text-label-md">Request from {req.studentName || 'Student'}</h3>
-                          <p className="text-on-surface-variant text-label-sm">{new Date(req.startTime).toLocaleString([], { weekday: 'long', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                          <h3 className="font-bold text-title-lg">{session.student?.username || 'Student'}</h3>
+                          <p className="text-on-surface-variant text-label-sm mt-1">{session.sessionAgenda || 'Mentorship Session'}</p>
                         </div>
                       </div>
-                      <div className="flex gap-sm w-full md:w-auto mt-4 md:mt-0">
-                        <Button variant="ghost" className="text-error hover:bg-error/10 flex-1 md:flex-none">Decline</Button>
-                        <Button className="flex-1 md:flex-none" iconRight="check">Accept</Button>
+                      
+                      <div className="flex gap-xl items-center w-full md:w-auto justify-between md:justify-end">
+                        <div className="text-right">
+                          <p className="font-bold text-label-md">{new Date(session.startTime).toLocaleDateString()}</p>
+                          <p className="text-on-surface-variant text-label-sm">{new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                        <div className="flex gap-sm">
+                          <Button variant="outline" className="h-12 w-12 !p-0 flex items-center justify-center rounded-xl" title="Reschedule">
+                            <span className="material-symbols-outlined">edit_calendar</span>
+                          </Button>
+                          <Button className="h-12 px-6 rounded-xl" iconRight="videocam">Join</Button>
+                        </div>
                       </div>
                     </MagicBento>
                   ))}
                 </div>
               ) : (
-                <MagicBento className="p-3xl text-center" tilt={false}>
-                  <EmptyState 
-                    icon="inbox"
-                    title="No pending requests" 
-                    description="You're all caught up! Keep your availability updated to attract more students."
-                  />
-                </MagicBento>
+                <EmptyState 
+                  icon="event_busy" 
+                  title="No upcoming sessions" 
+                  description="You have no scheduled sessions for the next 7 days."
+                />
               )}
-            </motion.div>
+            </section>
 
+            {/* Analytics Area */}
+            <section>
+              <h2 className="font-headline-lg text-headline-lg font-bold mb-lg">Engagement</h2>
+              <MagicBento className="p-xl h-[400px] w-full" tilt={false}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={analyticsData}>
+                    <defs>
+                      <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="name" stroke="var(--color-outline)" tick={{ fill: 'var(--color-on-surface-variant)' }} axisLine={false} tickLine={false} />
+                    <YAxis stroke="var(--color-outline)" tick={{ fill: 'var(--color-on-surface-variant)' }} axisLine={false} tickLine={false} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: 'var(--color-surface-container)', borderRadius: '12px', border: '1px solid var(--color-outline-variant)' }}
+                      itemStyle={{ color: 'var(--color-on-surface)' }}
+                    />
+                    <Area type="monotone" dataKey="hours" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorHours)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </MagicBento>
+            </section>
           </div>
 
-          {/* Sidebar Area: Upcoming Sessions */}
-          <div className="space-y-lg">
-            <h2 className="font-headline-md font-bold">Upcoming Today</h2>
-            {loading ? (
-              <MagicBento className="h-48 w-full p-md flex flex-col gap-sm justify-center">
-                 <Skeleton className="h-4 w-2/3" />
-                 <Skeleton className="h-3 w-1/2" />
-                 <Skeleton className="h-10 w-full mt-auto" />
-              </MagicBento>
-            ) : upcomingSessions.length > 0 ? (
-              <div className="space-y-md">
-                {upcomingSessions.map((session, i) => (
-                  <motion.div key={session.id} variants={fadeUp}>
-                    <MagicBento className="p-xl border-l-4 border-l-primary" tilt={false}>
-                      <div className="flex justify-between items-start mb-md">
-                        <div>
-                          <p className="font-bold text-label-md mb-xs">Session with {session.studentName || 'Student'}</p>
-                          <p className="text-on-surface-variant text-label-sm">
-                            {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                        <span className="material-symbols-outlined text-primary">video_camera_front</span>
-                      </div>
-                      <Button iconRight="arrow_outward" className="w-full">Join Meeting</Button>
-                    </MagicBento>
-                  </motion.div>
-                ))}
+          {/* Sidebar Area */}
+          <div className="space-y-2xl">
+            
+            {/* Pending Requests */}
+            <section>
+              <div className="flex justify-between items-center mb-lg">
+                <h2 className="font-headline-lg text-headline-lg font-bold">Requests</h2>
+                <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-label-sm font-bold">{pendingRequests.length}</span>
               </div>
-            ) : (
-              <motion.div variants={fadeUp}>
-                <MagicBento className="text-center p-3xl" tilt={false}>
-                  <span className="material-symbols-outlined text-5xl text-primary/50 mb-md block">celebration</span>
-                  <p className="text-label-md font-bold mb-xs">Clear Schedule</p>
-                  <p className="text-label-sm text-on-surface-variant">Enjoy your day off!</p>
-                </MagicBento>
-              </motion.div>
-            )}
 
+              {loading ? (
+                <div className="space-y-md">
+                  {[1, 2].map(i => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
+                </div>
+              ) : pendingRequests.length > 0 ? (
+                <div className="space-y-md">
+                  {pendingRequests.map((req, i) => (
+                    <MagicBento key={req.id || i} className="p-lg bg-surface-container-low" tilt={false}>
+                      <div className="flex gap-md mb-md">
+                        <img 
+                          src={`https://i.pravatar.cc/150?u=${req.student?.username || 'unknown'}`} 
+                          alt="Student" 
+                          className="w-12 h-12 rounded-full object-cover border border-outline-variant/50"
+                        />
+                        <div>
+                          <p className="font-bold text-label-md">{req.student?.username || 'Student'}</p>
+                          <p className="text-on-surface-variant text-label-sm">{new Date(req.startTime).toLocaleDateString()} at {new Date(req.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                      </div>
+                      <p className="text-body-sm text-on-surface-variant mb-md line-clamp-2">
+                        {req.sessionAgenda || 'Requested a mentorship session.'}
+                      </p>
+                      <div className="grid grid-cols-2 gap-sm">
+                        <Button variant="outline" className="w-full py-2 !text-label-sm hover:bg-error/10 hover:text-error hover:border-error/50" onClick={() => handleReject(req.id)}>Decline</Button>
+                        <Button className="w-full py-2 !text-label-sm" onClick={() => handleConfirm(req.id)}>Accept</Button>
+                      </div>
+                    </MagicBento>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState 
+                  icon="done_all" 
+                  title="All caught up" 
+                  description="You have no pending requests to review."
+                />
+              )}
+            </section>
+            
+            {/* Profile Completion */}
             <motion.div variants={fadeUp} className="pt-xl">
               <h2 className="font-headline-md font-bold mb-lg">Profile Completion</h2>
               <MagicBento className="p-xl" tilt={false}>
@@ -235,8 +264,8 @@ const MentorDashboard = () => {
               </MagicBento>
             </motion.div>
           </div>
-
-        </motion.div>
+          
+        </div>
       </main>
     </div>
   );
