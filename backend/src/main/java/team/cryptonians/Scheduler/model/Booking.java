@@ -25,6 +25,7 @@ public class Booking {
         this.status = status;
         this.sessionAgenda = sessionAgenda;
         this.createdAt = createdAt;
+
     }
 
     @Id

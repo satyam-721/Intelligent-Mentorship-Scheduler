@@ -31,6 +31,9 @@ public class StudentService {
     @Autowired
     BookingRepo bookingRepo;
 
+    @Autowired
+    EmailService emailService;
+
     public List<AvailabilitySlotResponse> getAllSlots() {
 
         Authentication auth = SecurityContextHolder
@@ -121,6 +124,7 @@ public class StudentService {
 
 
 
+
         Booking booking = new Booking(
                 mentor,
                 student,
@@ -131,9 +135,13 @@ public class StudentService {
                 Booking.BookingStatus.BOOKED,
                 sessionAgenda,
                 Instant.now()
-
-
         );
+        booking = bookingRepo.save(booking);
+        String meetingLink = new MeetLinkGenerationService().generateFor(booking);
+        booking.setMeetLink(meetingLink);
+
+        emailService.sendBookingConfirmation(booking,meetingLink);
+
         return bookingRepo.save(booking);
 
 
